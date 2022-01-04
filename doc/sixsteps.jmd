@@ -1,0 +1,364 @@
+---
+title: A six-steps method to define permutations of sequences with heterogeneous, long distances
+author: Helios De Rosario
+date: `j import Dates; Dates.Date(Dates.now())`
+weave_options:
+  md2html:
+    out_path : html
+  md2pdf:
+    out_path : pdf
+  fig_ext : .png
+---
+
+# Introduction
+
+There are problems that involve the comparison of pairs of data from a given sample, in order to discover or analyze features that can be observed in the contrast between sufficiently different pairs. An example of such a problem is the computation of the center of the axis of rotation of a kinematic joint, based on the measureement of rotations and translations betwen pairs of observed positions of the linked bodies [1,2].
+
+In such problems there are $N$ data points that have to be organized in $M$ pairs. A simple approach consists in taking the full set of $M = N(N-1)/2$ possible pairs, but the number of combinations grows quadratically with the size of the sample, and they often include many irrelevant pairs of very similar data points.
+
+More efficient strategies can be defined if the data are arranged according to a metric $\delta$ that defines the degree of ``distance'' between two points; for instance, sorting the data set $X$ as $\{x_1, x_2,\ldots, x_N\}$, such that if
+$1 \leq a \leq b < c \leq d \leq N$ for any set of integers,
+then it is assured that $\delta(x_a,x_d) > \delta(x_b, x_c)$ (i.e. the distance betweeen $x_a$ and $x_d$ will be greater than the distance between $x_b$ and $x_c$).
+
+There is an additional advantage if the distance metric $\delta$ is commutative:
+
+```math
+\begin{equation} 
+  \delta(x_i, x_j) = \delta(x_j, x_i),
+\end{equation} 
+```
+
+and the difference between consecutive points of the arranged series is sufficiently homogeneous, such that
+
+```math
+\begin{equation}
+  \max\left(\left\{ \delta(x_i, x_{i+1}) \right\}_{i=1}^{N-1} \right) <
+  \frac{H}{H-1} 
+  \min\left(\left\{ \delta(x_i, x_{i+1}) \right\}_{i=1}^{N-1} \right),
+  \quad\textrm{for } H = \left\lceil{\frac{N}{2}}\right\rceil .
+\end{equation}
+```
+
+If that condition is met, then the difference between the indices of two data points, which we will call the ``span'' of that pair, can be used as a relative measure of the original distance metric; or more precisely:
+
+```math
+\begin{equation}
+  |i-j| < |u-v| \implies \delta(x_i, x_j) < \delta(x_u, x_v)
+\end{equation}
+```
+
+# Previous approaches
+
+There is a total of $N(N-1)/2$ possible different pairs that can be made out of a set of $N$ data points. If they can be ordered as commented above, that full set of pairs contains one pair with span equal to $N$ ($\{x_1, x_N\}$), two pairs with span equal to $(N-1)$ ($\{x_1, x_{N-1}\}$ and $\{x_2, x_N\}$), and generally $N-s+1$ pairs with span equal to $s$, for $1 \leq N-1$.
+
+A minimal set of pairs with relatively great spans, containing all the data points, can be defined as:
+
+```math
+\begin{equation}
+  p_i = \{x_i, x_{i+h}\}\quad\textrm{for } i=1,\ldots,H,
+  \quad h=\left\lfloor{\frac{N}{2}}\right\rfloor,
+  \quad H=\left\lceil{\frac{N}{2}}\right\rceil
+\end{equation}
+```
+
+That set has about half the elements of the data set ($M=H$), such that every data point is included in one pair (except $x_h$, which is included in two pairs if $N$ is odd), and the span of all pairs is equal to $h$, which is about half the maximum possible span.
+
+However, a more heterogeneous distribution of spans may be desired, while keeping a balanced representation of all points, and a number of pairs that grows linearly with $N$.
+An example of such a set of pairs is the one obtained by the algorithm proposed in [3], which produces $N-1$ ``nested'' pairs with decreasing spans.
+That result can be defined as the set of consecutive pairs $\{y_i, y_{i+1}\}$ from a permutation of the original assortment of data, such that using the definition of $H$ in (4):
+
+* The odd elements$\{y_1, y_3, \ldots, y_{2H-1}\}$ are the ascending series $\{x_1, x_2, \ldots, x_H\}$, and
+* the even elements $\{y_2, y_4, \ldots, y_{2h}\}$ are the descending series $\{x_N, x_{N-1}, \ldots, x_{H+1}\}$.
+
+That set includes one pair for each one of the whole range of possible spans, from 1 to $N-1$. The first pair $pi=\{x_1, x_N\}$ has the greatest span, and the last one $p_{N-1}=\{x_H,x_{H+1}\}$ has the smallest one.
+Moreover, the indices of any pair are always inside the range of indices defined by previous pairs, so that if $i<j$, the distance between the data points of the pair $p_i$ will be always greater than the distance between the data points of $p_j$.
+
+# Definition of the ``six-steps'' algorithm
+
+Here is proposed an alternative algorithm to create a permutation of a series of ordered data pointes, which can be used in a similar way to define $N$ pairs of data with the following properties:
+
+1. All data points are included in exactly two pairs.
+2. The greatest span is $N-1$ (the possible greatest span).
+3. The smallest span is 1 for $N=2$, and $\left\lfloor N/3 \right\rfloor$ for any other N.
+
+## Description of the algorithm
+
+Let $X$ be an ordered set of $N > 1$ data points, such that $X = \{x_1, \ldots, x_N\}$, and let:
+
+```math
+\begin{equation}
+\begin{split}
+  h = \left\lfloor N/2 \right\rfloor \\
+  H = \left\lceil N/2 \right\rceil \\
+  D = \left\lfloor N/6 \right\rfloor
+\end{split}
+\end{equation}
+```
+
+Then a permuted data set $Y  \{y_1, \ldots, y_N\}$ is defined, such that $y_i = x_{f(i)}$, where the permutation function $f(i)$ maps each integer $i \in [1,N]$ to another integer in the same range, through the following equations:
+
+```math
+\begin{equation}
+\begin{split}
+  d & = \left\lfloor i/6 \right\rfloor \\
+  r & = i \textrm{ mod } 6 = i - 6d \\
+  f(i) & = g(d, r), \quad \textrm{where:}
+\end{split}
+\end{equation}
+\begin{equation}
+\begin{split}
+  \textrm{for } r=0,&  \quad g(d,0) = H+d \\
+  \textrm{for } r=1,&  \quad g(d,1) = 2d+1 \\
+  \textrm{for } r=2,&  \quad g(d,2) = N-2d \\
+  \textrm{for } r=3,&  \quad g(d,3) = H-d \\
+  \textrm{for } r=4,&  \quad g(d,4) = N-2d-1 \\
+  \textrm{for } r=5,&  \quad g(d,5) = 2d+2 \\
+\end{split}
+\end{equation}
+```
+
+Thus, the function $f(i)$ starts with $f(1)=g(0,1)=1$, $f(2)=g(0,2)=N$, and runs cyclically through the list of definitions of $g(d,r)$ given in (7), incrementing $r$ in each step and $d$ every 6 steps (although the first cycle has at most 5 steps), until $i$ reaches $N$.
+
+Then, the set of pairs $P=\{p_1, \ldots, p_N\}$ is defined as:
+
+```math
+\begin{equation}
+\begin{split}
+  p_i & = \{y_i, y_{i+1}\}\quad\textrm{for } i=1,\ldots,N-1, \\
+  p_N & = \{y_1, y_N\}
+\end{split}
+\end{equation}
+```
+
+# Demonstrations
+
+## Demonstration of condition #2
+
+According to (8), the span of the $i$-th pair, $s(i)$ is:
+
+```math
+\begin{equation}
+\begin{split}
+  s(i) & = |f(i+1)-f(i)| \quad\textrm{for } i=1,\ldots,N-1, \\
+  s(N) & = |f(N) - 1|
+\end{split}
+\end{equation}
+```
+
+Since $f(1)=1$ and $f(2)=N$, then $s(1)=N-1$, so #2 is true for any $N$.
+
+## Demonstration of conditions #1 and #3 for $N<6$
+
+For values of $N$ between 2 and 5 ($D=0$), the sequences of permutations are:
+
+
+```math
+\begin{split}
+  \textrm{for } N=2,&  \quad \{f(1),f(2)\} = \{1,2\} \\
+  \textrm{for } N=3,&  \quad \{f(1), \ldots , f(3)\} = \{1,3,2\} \\
+  \textrm{for } N=4,&  \quad \{f(1), \ldots , f(4)\} = \{1,4,2,3\} \\
+  \textrm{for } N=5,&  \quad \{f(1), \ldots , f(5)\} = \{1,5,3,4,2\} \\
+\end{split}
+```
+
+Condition #1 follows from the the fact that indices between 1 and $N$ occur exactly once in each sequence. On the other hand, $\left\lfloor N/3 \right\rfloor$ is 0 for $N=2$, and 1 for $3 \le N \le 5$, whereas the minimum span is 1 in all those sequences, so condition #2 is also true for all $N<6$. 
+
+## Condition #1 for $N \geq 6$
+
+As in the case of $N<6$, the demonstration of condition #1 will be based on demonstrating that the indices between 1 and $N$ occur exactly once in the permuted sequence defined in (6-7).
+
+### Lemma 1
+
+*If $N\geq 6$, the set of indiced mapped by $f(i)$ with $i \in [1, 6k+5]$ fills the following ranges for any integer $k > 0$:*
+
+```math
+\begin{equation}
+\begin{split}
+  \textrm{Lower range },  & \quad R_k^L = [1, g(k,5)] = [1, 2k+2] \\
+  \textrm{Middle range }, & \quad R_k^M = [g(k,3), g(k,0)] = [H-k, H+k] \\
+  \textrm{Upper range},   & \quad R_k^U = [g(k,4), N] = [N-2k-1, N]
+\end{split}
+\end{equation}
+```
+
+**Demonstration**:
+
+The set of indices mapped by $f(1), \ldots, f(5)$ as defined in (5-8) can be represented graphically as in Figure 1. Those values fill the ranges defined in (10) for $k=0$, as stated:
+
+```math
+R_0^L=[1,2], \qquad R_0^M=[H], \qquad R_0^U=[N-1,N]
+```
+
+![First 5 elements](../assets/first5elements.png)
+
+For $k>0$, the set of indices mapped by $f(6k), \ldots, f(6k+5)$ are the ones marked in red in Figure 2. 
+
+![Elements of the k-th cycle](../assets/otherelements.png)
+
+Therefore, if Lemma 1 is true for $k-1$, then:
+
+* The values $g(k,1)$ and $g(k,5)$ extend $R_{k-1}^L$ to $R_k^L$;
+* The values $g(k,0)$ and $g(k,3)$ extend $R_{k-1}^M$ to $R_k^M$;
+* The values $g(k,2)$ and $g(k,4)$ extend $R_{k-1}^U$ to $R_k^U$;
+
+and since it has been demonstrated that Lemma 1 is true for k=0, that means that Lemma 1 is also true for all values of $k>0$.
+
+### Lemma 2
+
+*For all $k$ between 1 and $D-1$, the ranges $R_k^L$, $R_k^M$ and $R_k^U$ do not overlap.*
+
+**Demonstration**
+
+Since $\min(R_k^L) < \max(R_k^M)$ by definition for any $k$ if $N \geq 6$, in order to state that $R_k^L$ and $R_k^M$ do not overlap it is sufficient to demonstrate that $\max(R_k^L) < \min(R_k^M)$. Given the definitions of those ranges in (10), that means that the following inequation must be true:
+
+```math
+2k+2 < H-k \implies H-3k-2 > 0
+```
+
+For $k$ between 1 and $D-1$, the minimum value of $H-3k-2$ occurs at $k=D-1$, so it is sufficient to demonstrate that:
+
+```math
+H-3D+1>0
+```
+
+Likewise, $\min(R_k^M) < \max(R_k^U)$, so in order to state that $R_k^M$ and $R_k^U$ do not overlap it is sufficient to demonstrate that $\max(R_k^M) < \min(R_k^U)$, or, following the same logic as before and considering that $h=N-H$:
+
+```math
+H+k < N-2k-1 \implies N-H-3k-1>0 \implies h-3D+2>0
+```
+
+Given the definitions of $h$, $H$ and $D$ in (5), the relationship between $h$ or $H$ and $D$ depends on the remainder of $N$ over $6D$, but in all cases both statements are true:
+
+```math
+\begin{equation}
+\begin{matrix}
+  \textrm{for } N=6D,   \hfill & h=3D,\hfill   & H=3D \hfill \\
+  \textrm{for } N=6D+1, \hfill & h=3D,\hfill   & H=3D+1 \hfill \\
+  \textrm{for } N=6D+2, \hfill & h=3D+1,\hfill & H=3D+1 \hfill \\
+  \textrm{for } N=6D+3, \hfill & h=3D+1,\hfill & H=3D+2 \hfill \\
+  \textrm{for } N=6D+4, \hfill & h=3D+2,\hfill & H=3D+2 \hfill \\
+  \textrm{for } N=6D+5, \hfill & h=3D+1,\hfill & H=3D+3 \hfill \\
+\end{matrix}
+\end{equation}
+```
+```math
+\vspace{1mm}
+```
+
+The demonstration of the two previous lemmas is sufficient to demonstrate that the indices contained in the ranges $R_{D-1}^L$, $R_{D-1}^M$ and $R_{D-1}^U$ are mapped exactly once in the set of values $\{f(1), \ldots, f(6D-1)\}$.
+To complete the demonstration of condition #1, it must also be demonstrated that $\{f(6D), \ldots, f(N)\}$ are mapped exactly once in the remaining ``gaps'', between $R_{D-1}^M$ and $R_{D-1}^L$ or $R_{D-1}^U$, which are defined as follows:
+
+```math
+\begin{equation}
+\begin{split}
+  G^L & = ]\max(R_{D-1}^L), \min(R_{D-1}^M)[, = ]2D, H-D+1[ \\
+  G^U & = ]\max(R_{D-1}^M), \min(R_{D-1}^U)[, = ]H+D-1, N-2D+1[ \\
+\end{split}
+\end{equation}
+```
+
+Now, replacing the values of $H$ as functions of $D$ according to (11), table 1 shows that the sets of values contained in $G^L$ and $G_U$ coincide with $\{g(D,0), \ldots, g(D,N-6D)\}$, which are the same as $\{f(6D), \ldots, f(N)\}$:
+
+```math
+\vspace{1mm}
+```
+Table 1. ``Gaps'' filled in the last cycle.
+
+|$N$   |$\{2D+1, \ldots, H-D\}$    |$\{H+D, \ldots, N-2D\}$    |
+| :--- | :------------------------ | :------------------------ |
+|$6D$  |$\emptyset$                |$\{g(D,0)\}=\{4D\}$        |
+|$6D+1$|$\{g(D,1)\}=\{2D+1\}$      |$\{g(D,0)\}=\{4D+1\}$      |
+|$6D+2$|$\{g(D,1)\}=$              |$\{g(D,0),g(D,2)\}=$       |
+|      |$\quad\{2D+1\}$            |$\quad\{4D+1,4D+2\}$       |
+|$6D+3$|$\{g(D,1),g(D,3)\}=$       |$\{g(D,0),g(D,2)\}=$       |
+|      |$\quad\{2D+1,2D+2\}$       |$\quad\{4D+2,4D+3\}$       |
+|$6D+4$|$\{g(D,1),g(D,3)\}=$       |$\{g(D,0),g(D,4),g(D,2)\}=$|
+|      |$\quad\{2D+1,2D+2\}$       |$\quad\{4D+2,4D+3,4D+4\}$  |
+|$6D+5$|$\{g(D,1),g(D,5),g(D,3)\}=$|$\{g(D,0),g(D,4),g(D,2)\}=$|
+|      |$\quad\{2D+1,2D+2,2D+3\}$  |$\quad\{4D+3,4D+4,4D+5\}$  |
+
+## Condition #3 for $N \geq 6$
+
+Condition #3 states that the spans of all pairs, which are formulated as $s(i)$ in (9), are equal or greater than $\left\lfloor N/3 \right\rfloor$.
+
+The span of the last pair $s(N)$ is $|f(N)-f(1)|$; and taking into account that $f(1)=1$ and the values of $f(N)$ that can be extracted from Table 1:
+
+```math
+\begin{equation}
+\begin{split}
+  \textrm{for } N=6D,   &  \quad s(N) = 4D-1 \\
+  \textrm{for } N=6D+1, &  \quad s(N) = 2D   \\
+  \textrm{for } N=6D+2, &  \quad s(N) = 4D+1 \\
+  \textrm{for } N=6D+3, &  \quad s(N) = 3D+1 \\
+  \textrm{for } N=6D+4, &  \quad s(N) = 4D+2 \\
+  \textrm{for } N=6D+5, &  \quad s(N) = 2D+1 \\
+\end{split}
+\end{equation}
+```
+
+It is straightforward to demonstrate that $s(N)$ is always equal or greater than $\left\lfloor N/3 \right\rfloor$, since for any integer $D$:
+
+```math
+\begin{equation}
+\begin{split}
+  \textrm{if } N \in \{6D,6D+1,6D+2\}, & \implies \left\lfloor N/3 \right\rfloor = 2D \\
+  \textrm{if } N \in \{6D+3,6D+4,6D+5\}, & \implies \left\lfloor N/3 \right\rfloor = 2D+1 \\
+\end{split}
+\end{equation}
+```
+
+On the other hand, the spans of the pairs for any other $i<N$ can be defined as follows, replacing the definitions of (6) into (9):
+
+```math
+\begin{equation}
+\begin{split}
+  s(i) = t(d,r) = & |g(d,r)-g(d,r+1)| \quad \textrm{ if } i<N \textrm{ and } r<5, \\
+                  & |g(d,5)-g(d+1,0)| \quad \textrm{ if } i<N \textrm{ and } r=5, \\
+\end{split}
+\end{equation}
+```
+and using (7), considering that $H-N=h$:
+
+```math
+\begin{equation}
+\begin{split}
+  \textrm{for } r=0,&  \quad t(d,0) = H-d-1  \\
+  \textrm{for } r=1,&  \quad t(d,1) = N-4d-1 \\
+  \textrm{for } r=2,&  \quad t(d,2) = h-d    \\
+  \textrm{for } r=3,&  \quad t(d,3) = h-d-1  \\
+  \textrm{for } r=4,&  \quad t(d,4) = N-4d-3 \\
+  \textrm{for } r=5,&  \quad t(d,5) = H-d-1  \\
+\end{split}
+\end{equation}
+```
+
+It can be observed that the expressions that define $t(d,r)$ are monotonically decreasing with $d$, so the minimum possible value of $t(d,r)$ will coincide with the minimum of $t(D,r)$ for $r \in [0,N-6D[$ and $t(D-1,r)$ for $r \in [N-6D,5]$. Those values are given in Table 2, obtained by replacing the values of $h$ and $H$ from (11) in (16).
+
+```math
+\vspace{1mm}
+```
+
+Table 2. Minima of $s(i)$ for $i<N$.
+
+|$N$   |$\min(s(i)=t(d,r))$            |
+| :--- | :---------------------------- |
+|$6D$  |$t(D-1,0)=t(D-1,3)=t(D-1,5)=2D$|
+|$6D+1$|$t(D,0)=t(D-1,3)=2D$           |
+|$6D+2$|$t(D,0)=2D$                    |
+|$6D+3$|$t(D,2)=t(D-1,3)=2D+1$         |
+|$6D+4$|$t(D,0)=t(D,3)2D+1$            |
+|$6D+5$|$t(D,3)=2D+1$                  |
+
+```math
+\vspace{0mm}
+```
+
+So according to (14), the minimum of $s(i)$ is exactly $\left\lfloor N/3 \right\rfloor$.
+
+# References
+
+[1] Ehrig, R.M., Taylor W.R., Duda, G.N., O Heller, M. ``A survey of formal methods for determining the centre of rotation of ball joints.'' *Journal of Biomechanics*. 2006; 39(15):2798-809.
+
+[2] Ehrig, R.M., Taylor W.R., Duda, G.N., O Heller, M. ``A survey of formal methods for determining functional joint axes.'' *Journal of Biomechanics*. 2007; 40(10):2150-7.
+
+[3] Camomilla V., Cereatti A., Vannozzi G., Cappozzo A. ``An optimized protocol for hip joint centre determination using the functional method.'' *Journal of Biomechanics*. 2006; 39(6):1096-106. 
